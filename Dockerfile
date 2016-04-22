@@ -3,8 +3,12 @@ MAINTAINER Bojan Cekrlic
 
 # You can set this variables when running the image to override the host name or
 # foward the messages to another server
-#ENV	HOSTNAME
-#ENV	RELAYHOST
+# ENV	HOSTNAME
+# Hostname that will be used in the outgoing mail
+# ENV	RELAYHOST
+# The relay host for this server
+# ENV	ALLOWED_SENDER_DOMAINS
+# Limit the list of sending domains to this list only
 
 RUN	true && \
 	apk add --no-cache --update postfix ca-certificates supervisor rsyslog bash && \
@@ -15,9 +19,10 @@ COPY	rsyslog.conf /etc/rsyslog.conf
 COPY	postfix.sh /postfix.sh
 RUN	chmod +x /postfix.sh
 
-VOLUME	[ "/var/spool/postfix" ]
+VOLUME	[ "/var/spool/postfix", "/etc/postfix" ]
 
 USER	root
 WORKDIR	/tmp
-ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
 
+EXPOSE 587
+ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
