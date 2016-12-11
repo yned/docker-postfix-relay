@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Disable SMTPUTF8, because libraries (ICU) are missing in alpine
 postconf -e smtputf8_enable=no
@@ -17,15 +17,15 @@ postconf -e smtpd_helo_required=yes
 postconf -e "smtpd_helo_restrictions=permit_mynetworks,reject_invalid_helo_hostname,permit"
 
 # Set up host name
-if [[ ! -z "$HOSTNAME" ]]; then
-	postconf -e myhostname=$HOSTNAME
+if [ ! -z "$HOSTNAME" ]; then
+	postconf -e myhostname="$HOSTNAME"
 else
 	postconf -# myhostname
 fi
 
 # Set up a relay host, if needed
-if [[ ! -z "$RELAYHOST" ]]; then
-	postconf -e relayhost=$RELAYHOST
+if [ ! -z "$RELAYHOST" ]; then
+	postconf -e relayhost="$RELAYHOST"
 else
 	postconf -# relayhost
 fi
@@ -44,12 +44,12 @@ fi
 postconf -e "mynetworks=127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
 
 # Split with space
-if [[ ! -z "$ALLOWED_SENDER_DOMAINS" ]]; then
+if [ ! -z "$ALLOWED_SENDER_DOMAINS" ]; then
 	echo "Setting up allowed SENDER domains:"
 	allowed_senders=/etc/postfix/allowed_senders
-	rm -f $allowed_senders $allowed_senders.db > /dev/null
+	rm -f $allowed_senders $allowed_senders.db
 	touch $allowed_senders
-	for i in "$ALLOWED_SENDER_DOMAINS"; do
+	for i in $ALLOWED_SENDER_DOMAINS; do
 		echo -e "\t$i"
 		echo -e "$i\tOK" >> $allowed_senders
 	done
@@ -66,4 +66,4 @@ fi
 # Use 587 (submission)
 sed -i -r -e 's/^#submission/submission/' /etc/postfix/master.cf
 
-/usr/sbin/postfix -c /etc/postfix start
+exec supervisord -c /etc/supervisord.conf

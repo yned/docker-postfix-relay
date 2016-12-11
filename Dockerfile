@@ -10,19 +10,17 @@ MAINTAINER Bojan Cekrlic
 # ENV	ALLOWED_SENDER_DOMAINS
 # Limit the list of sending domains to this list only
 
-RUN	true && \
-	apk add --no-cache --update postfix ca-certificates supervisor rsyslog bash && \
-	(rm "/tmp/"* 2>/dev/null || true) && (rm -rf /var/cache/apk/* 2>/dev/null || true)
+RUN	apk add --no-cache --update postfix ca-certificates supervisor && \
+	rm -f /tmp/* && rm -rf /var/cache/apk/*
 
-COPY	supervisord.conf /etc/supervisord.conf
-COPY	rsyslog.conf /etc/rsyslog.conf
-COPY	postfix.sh /postfix.sh
-RUN	chmod +x /postfix.sh
+COPY supervisord.conf /etc/supervisord.conf
+COPY run.sh /run.sh
+RUN chmod +x /run.sh
 
-VOLUME	[ "/var/spool/postfix", "/etc/postfix" ]
+VOLUME [ "/var/spool/postfix", "/etc/postfix" ]
 
-USER	root
+USER root
 WORKDIR	/tmp
 
-EXPOSE 587
-ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+EXPOSE 25 587
+CMD ["/run.sh"]
