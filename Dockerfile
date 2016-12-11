@@ -1,11 +1,12 @@
 FROM alpine:edge
-MAINTAINER Bojan Cekrlic
 
 # You can set this variables when running the image to override the host name or
 # foward the messages to another server
 # ENV	HOSTNAME
-# Hostname that will be used in the outgoing mail
-# ENV	RELAYHOST
+# Hostname and optional authentication that will be used in the outgoing mail
+# ENV	SMTP_SERVER
+# ENV	SMTP_USERNAME
+# ENV	SMTP_PASSWORD
 # The relay host for this server
 # ENV	ALLOWED_SENDER_DOMAINS
 # Limit the list of sending domains to this list only

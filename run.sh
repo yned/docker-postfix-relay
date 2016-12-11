@@ -1,5 +1,7 @@
 #!/bin/sh
 
+chown root: /var/spool/postfix /var/spool/postfix/pid
+
 # Disable SMTPUTF8, because libraries (ICU) are missing in alpine
 postconf -e smtputf8_enable=no
 
@@ -23,24 +25,6 @@ else
 	postconf -# myhostname
 fi
 
-# Set up a relay host, if needed
-if [ ! -z "$RELAYHOST" ]; then
-	postconf -e relayhost="$RELAYHOST"
-else
-	postconf -# relayhost
-fi
-
-# Set up my networks to list only networks in the local loopback range
-#network_table=/etc/postfix/network_table
-#touch $network_table
-#echo "127.0.0.0/8    any_value" >  $network_table
-#echo "10.0.0.0/8     any_value" >> $network_table
-#echo "172.16.0.0/12  any_value" >> $network_table
-#echo "192.168.0.0/16 any_value" >> $network_table
-## Ignore IPv6 for now
-##echo "fd00::/8" >> $network_table
-#postmap $network_table
-#postconf -e mynetworks=hash:$network_table
 postconf -e "mynetworks=127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
 
 # Split with space
@@ -62,6 +46,26 @@ else
 	postconf -# "smtpd_restriction_classes"
 	postconf -e "smtpd_recipient_restrictions=reject_non_fqdn_recipient,reject_unknown_recipient_domain,reject_unverified_recipient"
 fi
+
+# Set up a relay host, if needed
+if [ ! -z "$SMTP_SERVER" ]; then
+    postconf -e "relayhost = [$SMTP_SERVER]:587"
+else
+	postconf -# relayhost
+fi
+
+postconf -e "smtp_use_tls=yes"
+if [ -n "$SMTP_USERNAME" ] && [ -n "$SMTP_PASSWORD" ]; then
+    postconf -e "smtp_sasl_auth_enable = yes"
+    postconf -e "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd"
+    postconf -e "smtp_sasl_security_options = noanonymous"
+    echo "[$SMTP_SERVER]:587 $SMTP_USERNAME:$SMTP_PASSWORD" >> /etc/postfix/sasl_passwd
+    postmap hash:/etc/postfix/sasl_passwd
+    #postconf -e "smtp_generic_maps = hash:/etc/postfix/generic"
+    #echo "/.*/    $SMTP_USERNAME" >> /etc/postfix/generic
+    #postmap hash:/etc/postfix/generic
+fi
+
 
 # Use 587 (submission)
 sed -i -r -e 's/^#submission/submission/' /etc/postfix/master.cf
