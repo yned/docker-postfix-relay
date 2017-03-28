@@ -54,6 +54,8 @@ else
 	postconf -# relayhost
 fi
 
+postconf -e "message_size_limit=0"
+
 postconf -e "smtp_use_tls=yes"
 if [ -n "$SMTP_USERNAME" ] && [ -n "$SMTP_PASSWORD" ]; then
     postconf -e "smtp_sasl_auth_enable = yes"
